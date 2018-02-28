@@ -39,7 +39,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             startActivity(intent);
             break;
             case R.id.nav:
-            intent = new Intent(this,Navigation.class);
+            intent = new Intent(this, Navigation.class);
             startActivity(intent);
             break;
         }
@@ -50,10 +50,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.READ_EXTERNAL_STORAGE)
                 + ContextCompat.checkSelfPermission(this,
-                        Manifest.permission.CAMERA)
+                        Manifest.permission.CAMERA) + ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED){
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_FINE_LOCATION},
                         MY_PERMISSIONS_REQUEST_CAMERA);
         }
     }
