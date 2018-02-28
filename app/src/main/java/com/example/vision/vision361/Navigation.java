@@ -16,10 +16,12 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.vision.vision361.GoogleMaps.GetNearbyPlacesData;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -53,7 +55,8 @@ public class Navigation extends FragmentActivity implements OnMapReadyCallback,
     private Marker currentLocationMarker;
     public static final int REQUEST_LOCATION_CODE= 99;
     private final int REQ_CODE_SPEECH_INPUT = 100;
-
+    int PROXIMITY_RADIUS = 10000;
+    double latitude,longitude;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,12 +134,35 @@ public class Navigation extends FragmentActivity implements OnMapReadyCallback,
     }
 
     private void getPlaces() {
+        String url = getUrl(latitude, longitude, tf_location.getText().toString());
+        Object dataTransfer[] =new Object[2];
+        dataTransfer[0]= mMap;
+        dataTransfer[1]= url;
+        GetNearbyPlacesData getNearbyPlacesData = new GetNearbyPlacesData();
+        getNearbyPlacesData.execute(dataTransfer);
+        Toast.makeText(this, "Showing nearby "+tf_location.getText().toString(), Toast.LENGTH_SHORT).show();
+    }
+
+    private String getUrl(double latitude, double longitude, String nearbyPlace) {
+        StringBuilder googlePlaceUrl = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
+        googlePlaceUrl.append("location="+latitude+","+longitude);
+        googlePlaceUrl.append("&radius="+PROXIMITY_RADIUS);
+        googlePlaceUrl.append("&type="+nearbyPlace);
+        googlePlaceUrl.append("&sensor=true");
+        googlePlaceUrl.append("&key="+"AIzaSyDCdInK74fQ-blTmGeKed4loXj9_xJ4qdI");
+
+        Log.d("MapsActivity", "url = "+googlePlaceUrl.toString());
+
+        return googlePlaceUrl.toString();
+    }
+
+    private void getPlace() {
         mMap.clear();
 
         String location = tf_location.getText().toString();
         List<Address> addressList = null;
         MarkerOptions mo = new MarkerOptions();
-        if( !location.equals(" ")) {
+        if( !location.equals("")) {
             Geocoder geocoder = new Geocoder(this);
             try {
                 addressList = geocoder.getFromLocationName(location, 5);
@@ -145,11 +171,12 @@ public class Navigation extends FragmentActivity implements OnMapReadyCallback,
             }
 
 
-            for(int i=0; i<addressList.size(); i++)
+            for(int i=0; i< addressList.size(); i++)
             {
                 Address myAddress = addressList.get(i);
                 LatLng latLng = new LatLng(myAddress.getLatitude(), myAddress.getLongitude());
-                mo.position(latLng);
+                mo.position(latLng)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
                 mMap.addMarker(mo);
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
             }
@@ -169,7 +196,8 @@ public class Navigation extends FragmentActivity implements OnMapReadyCallback,
     @Override
     public void onLocationChanged(Location location) {
         lastLocation = location;
-
+        latitude= location.getLatitude();
+        longitude= location.getLongitude();
         if(currentLocationMarker != null) {
             currentLocationMarker.remove();
         }
@@ -254,7 +282,7 @@ public class Navigation extends FragmentActivity implements OnMapReadyCallback,
                     ArrayList<String> result = data
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     tf_location.setText(result.get(0));
-                    getPlaces();
+                    getPlace();
                 }
                 break;
             }
